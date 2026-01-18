@@ -1,4 +1,4 @@
-const API_URL = '/api';
+const API_URL = import.meta.env.DEV ? 'http://localhost:8000/api' : '/api';
 
 let sessionId: string | null = localStorage.getItem('session_id');
 
