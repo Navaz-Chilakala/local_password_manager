@@ -563,6 +563,9 @@ def serve_frontend(full_path: str):
     return {"error": "Frontend not built. Run 'npm run build' in frontend folder."}
 
 
+# Vercel serverless handler
+handler = app
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
