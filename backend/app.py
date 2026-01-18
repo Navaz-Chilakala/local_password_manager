@@ -5,6 +5,8 @@ FastAPI backend for the password manager with all encryption and database logic.
 
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, List
 import sqlite3
@@ -32,8 +34,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Database path
-DB_PATH = "passwords.db"
+# Serve static files from frontend build
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATIC_DIR = os.path.join(BASE_DIR, "frontend", "dist")
+
+# Database path - use /tmp on Render for persistence
+if os.environ.get("RENDER"):
+    DB_PATH = "/tmp/passwords.db"
+else:
+    DB_PATH = "passwords.db"
 
 # Default categories
 DEFAULT_CATEGORIES = [
@@ -540,6 +549,18 @@ def generate_password(length: int = 16, include_special: bool = True):
 def check_password_strength(password: str):
     """Check password strength."""
     return calculate_password_strength(password)
+
+
+# Serve frontend for all non-API routes
+@app.get("/{full_path:path}")
+def serve_frontend(full_path: str):
+    """Serve the React frontend."""
+    if os.path.exists(STATIC_DIR):
+        file_path = os.path.join(STATIC_DIR, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+    return {"error": "Frontend not built. Run 'npm run build' in frontend folder."}
 
 
 if __name__ == "__main__":
